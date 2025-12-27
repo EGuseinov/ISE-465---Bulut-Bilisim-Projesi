@@ -48,9 +48,6 @@ Kurulum sonrası Dashboard'a (Horizon) erişimde `502 Bad Gateway` hataları al�
 
 ### 1.2. İmaj ve Network Sorunları
 * **Sorun:** `Invalid image identifier` hatası ve internet bağlantısındaki kopmalar nedeniyle imaj yüklenemedi.
-
-![Ping ve DNS Hatası](pictures/pingerror.png)
-
 * **Çözüm:** Bozuk imajlar veritabanından temizlendi. `wget -c` parametresi ile kesintiye dayanıklı indirme yapılarak önce CirrOS (test için), ardından Ubuntu 20.04 Cloud imajları sisteme dahil edildi ve OpenStack (Glance) servisine tanıtıldı:
 
     ```bash
