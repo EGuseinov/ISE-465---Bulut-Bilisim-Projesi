@@ -21,6 +21,9 @@ Bu proje kapsamında, IaaS (Infrastructure as a Service) katmanında **OpenStack
 * **Web Sunucusu:** Python `http.server` (Sadece statik dosyaları yayınlamak için kullanılmıştır)
 * **Dağıtım Yöntemi:** Infrastructure as Code (User Data / Cloud-Init)
 
+  <img width="5959" height="4359" alt="mimari_sema" src="https://github.com/user-attachments/assets/def7fe4c-6220-4c51-985c-367ca7fc9198" />
+
+
 ---
 
 ##  1. Kurulum ve Altyapı Hazırlığı (Zorluklar ve Çözümler)
@@ -30,6 +33,11 @@ Projenin en kritik aşaması, kendi bilgisayarımızda çalışan bir OpenStack 
 ### 1.1. Servis Kesintileri ve LVM Yapılandırması
 Kurulum sonrası Dashboard'a (Horizon) erişimde `502 Bad Gateway` hataları alındı. İncelemelerde `cinder-volume` servislerinin çalışmadığı görüldü.
 * **Sorun:** MicroStack, disk yönetimi için gerekli LVM (Logical Volume Manager) grubunu oluşturamamıştı.
+
+<img width="841" height="639" alt="neutronerror" src="https://github.com/user-attachments/assets/6ca15611-3a7c-44df-b81d-8111d99a06e4" />
+<img width="825" height="588" alt="badgateway" src="https://github.com/user-attachments/assets/a519ba4f-ce9e-45c6-bb25-6983d2874ec8" />
+
+
 * **Çözüm:** Manuel olarak loop-device oluşturulup LVM grubuna dahil edildi:
     ```bash
     sudo truncate -s 20G /var/snap/microstack/common/cinder-volumes
@@ -40,6 +48,8 @@ Kurulum sonrası Dashboard'a (Horizon) erişimde `502 Bad Gateway` hataları al�
 
 ### 1.2. İmaj ve Network Sorunları
 * **Sorun:** `Invalid image identifier` hatası ve internet bağlantısındaki kopmalar nedeniyle imaj yüklenemedi.
+  <img width="440" height="70" alt="pingerror" src="https://github.com/user-attachments/assets/fb8cae46-1404-473a-b71f-8ba3dd3d881c" />
+
 * **Çözüm:** Bozuk imajlar veritabanından temizlendi. `wget -c` parametresi ile kesintiye dayanıklı indirme yapılarak önce CirrOS (test için), ardından Ubuntu 20.04 Cloud imajları sisteme dahil edildi ve OpenStack (Glance) servisine tanıtıldı:
 
     ```bash
@@ -59,7 +69,7 @@ Kurulum sonrası Dashboard'a (Horizon) erişimde `502 Bad Gateway` hataları al�
     ```
 
 ### 1.3. Depolama Stratejisi (Ephemeral Disk)
-* **Sorun:** Cinder servisi stabil çalışmadığı için Volume oluşturma işlemleri zaman aşımına uğruyordu.
+* **Sorun:** Cinder servisi stabil çalışmadığı için Volume oluşturma işlemleri zaman aşımına uğruyordu.  
 * **Strateji:** Bulut mimarisinde "Stateless" prensibine uygun olarak, "Create New Volume: No" seçeneği ile **Ephemeral (Uçucu) Disk** kullanımına geçildi. Bu sayede instance başlatma süresi hızlandı ve hatalar giderildi.
 
 ### 1.4. Bağlantı Testi (CirrOS Denemesi)
@@ -89,6 +99,9 @@ Sanal makine oluşturulduğunda sadece OpenStack iç ağından (Private IP) eri�
 1.  OpenStack havuzundan bir **Floating IP** (Örn: `10.20.20.168`) tahsis edildi.
 2.  Bu IP, oluşturulan `web-main-server` instance'ına "Associate" edildi.
 
+<img width="757" height="336" alt="mainserver" src="https://github.com/user-attachments/assets/3dc44c59-0d65-465f-88e9-1c4d48bc14fa" />
+
+
 ### 2.4. Uygulamanın Yüklenmesi ve SSH Bağlantısı
 Sunucu hazır olduktan sonra yerel terminal üzerinden SSH protokolü ile bağlantı sağlandı:
 
@@ -106,12 +119,17 @@ ssh -i new-pair-key.pem ubuntu@10.20.20.168
 sudo python3 -m http.server 80
 ```
 
+
 ### 2.1. İlk Dağıtım (Main Server)
 Ana sunucu (`web-main-server`), manuel olarak oluşturuldu, Security Group (Port 80/22) ayarları yapıldı ve Floating IP (`10.20.20.168`) atandı. Uygulama başarıyla çalıştırıldı.
 
 ### 2.2. Ölçekleme Kriz Senaryosu: "Host Disk Full"
 Proje senaryosu gereği, ana sunucunun yedeğinin (Snapshot) alınarak çoğaltılması planlandı.
 * **Kritik Hata:** Snapshot işlemi sırasında Host makinenin (Windows) disk alanı doldu (`DrvVD_DISKFULL`). Sanal makine "Suspend" moduna geçti ve işlem başarısız oldu.
+
+<img width="780" height="553" alt="diskfull" src="https://github.com/user-attachments/assets/5f155ccc-9383-4993-87ed-8987eae44d67" />
+
+  
 * **Analiz:** Snapshot alma işlemi, ayrılan sanal disk boyutu kadar (20GB) ek alana ihtiyaç duyuyordu ve fiziksel donanım limitlerine takıldık.
 
 ---
@@ -149,3 +167,6 @@ EOF
 # --- 3. Servisi Başlat ---
 # Python HTTP sunucusunu arka planda 80 portunda çalıştır
 nohup sudo python3 -m http.server 80 > /dev/null 2>&1 &
+```
+<img width="868" height="632" alt="mainserver_replica" src="https://github.com/user-attachments/assets/b55f3279-d84a-4716-b26e-1e2ef6ddad28" />
+
