@@ -21,7 +21,7 @@ Bu proje kapsamında, IaaS (Infrastructure as a Service) katmanında **OpenStack
 * **Web Sunucusu:** Python `http.server` (Sadece statik dosyaları yayınlamak için kullanılmıştır)
 * **Dağıtım Yöntemi:** Infrastructure as Code (User Data / Cloud-Init)
 
-  <img width="5959" height="4359" alt="mimari_sema" src="https://github.com/user-attachments/assets/def7fe4c-6220-4c51-985c-367ca7fc9198" />
+![Proje Mimari Şeması](pictures/mimari_sema.png)
 
 
 ---
@@ -34,8 +34,8 @@ Projenin en kritik aşaması, kendi bilgisayarımızda çalışan bir OpenStack 
 Kurulum sonrası Dashboard'a (Horizon) erişimde `502 Bad Gateway` hataları alındı. İncelemelerde `cinder-volume` servislerinin çalışmadığı görüldü.
 * **Sorun:** MicroStack, disk yönetimi için gerekli LVM (Logical Volume Manager) grubunu oluşturamamıştı.
 
-<img width="841" height="639" alt="neutronerror" src="https://github.com/user-attachments/assets/6ca15611-3a7c-44df-b81d-8111d99a06e4" />
-<img width="825" height="588" alt="badgateway" src="https://github.com/user-attachments/assets/a519ba4f-ce9e-45c6-bb25-6983d2874ec8" />
+![Neutron Hatası](pictures/neutronerror.png)
+![Bad Gateway Hatası](pictures/badgateway.png)
 
 
 * **Çözüm:** Manuel olarak loop-device oluşturulup LVM grubuna dahil edildi:
@@ -48,7 +48,8 @@ Kurulum sonrası Dashboard'a (Horizon) erişimde `502 Bad Gateway` hataları al�
 
 ### 1.2. İmaj ve Network Sorunları
 * **Sorun:** `Invalid image identifier` hatası ve internet bağlantısındaki kopmalar nedeniyle imaj yüklenemedi.
-  <img width="440" height="70" alt="pingerror" src="https://github.com/user-attachments/assets/fb8cae46-1404-473a-b71f-8ba3dd3d881c" />
+
+![Ping ve DNS Hatası](pictures/pingerror.png)
 
 * **Çözüm:** Bozuk imajlar veritabanından temizlendi. `wget -c` parametresi ile kesintiye dayanıklı indirme yapılarak önce CirrOS (test için), ardından Ubuntu 20.04 Cloud imajları sisteme dahil edildi ve OpenStack (Glance) servisine tanıtıldı:
 
@@ -99,7 +100,7 @@ Sanal makine oluşturulduğunda sadece OpenStack iç ağından (Private IP) eri�
 1.  OpenStack havuzundan bir **Floating IP** (Örn: `10.20.20.168`) tahsis edildi.
 2.  Bu IP, oluşturulan `web-main-server` instance'ına "Associate" edildi.
 
-<img width="757" height="336" alt="mainserver" src="https://github.com/user-attachments/assets/3dc44c59-0d65-465f-88e9-1c4d48bc14fa" />
+![Main Server Instance](pictures/mainserver.png)
 
 
 ### 2.4. Uygulamanın Yüklenmesi ve SSH Bağlantısı
@@ -168,5 +169,5 @@ EOF
 # Python HTTP sunucusunu arka planda 80 portunda çalıştır
 nohup sudo python3 -m http.server 80 > /dev/null 2>&1 &
 ```
-<img width="868" height="632" alt="mainserver_replica" src="https://github.com/user-attachments/assets/b55f3279-d84a-4716-b26e-1e2ef6ddad28" />
+![Main Server And Replica Server Instance](pictures/mainserver_replica.png)
 
